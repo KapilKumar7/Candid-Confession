@@ -1,13 +1,12 @@
 const { app } = require("@azure/functions");
 const { MongoClient } = require("mongodb");
 
-const uri =
-  "mongodb+srv://mrkapilswach:6a1HmjNjb2i3ZJ1A@cluster0.szo5unb.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+const uri = process.env.MONGODB_URI || "mongodb://localhost:27017";
 const client = new MongoClient(uri);
 
 // Confession submission endpoint
 app.http("confessions", {
-  methods: ["GET"],
+  methods: ["POST"],
   authLevel: "anonymous",
   handler: async (request, context) => {
     try {
