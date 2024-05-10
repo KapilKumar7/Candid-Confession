@@ -1,12 +1,13 @@
 const { app } = require("@azure/functions");
 const { MongoClient } = require("mongodb");
 
-const uri = "mongodb://localhost:27017/";
+const uri =
+  "mongodb+srv://mrkapilswach:6a1HmjNjb2i3ZJ1A@cluster0.szo5unb.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 const client = new MongoClient(uri);
 
 // Confession submission endpoint
 app.http("confessions", {
-  methods: ["POST"],
+  methods: ["GET"],
   authLevel: "anonymous",
   handler: async (request, context) => {
     try {
@@ -36,7 +37,7 @@ app.http("confessions", {
   },
 });
 
-app.http("getAllConfessions", {
+app.http("getConfessions", {
   methods: ["GET"],
   authLevel: "anonymous",
   handler: async () => {
@@ -54,6 +55,19 @@ app.http("getAllConfessions", {
       };
     } finally {
       await client.close();
+    }
+  },
+});
+
+app.http("healthCheck", {
+  methods: ["GET"],
+  authLevel: "anonymous",
+  handler: async () => {
+    try {
+      return { status: 200, body: "Health check successful." };
+    } catch (error) {
+      console.error("Error occurred while performing health check:", error);
+      return { status: 500, body: "Health check failed." };
     }
   },
 });
