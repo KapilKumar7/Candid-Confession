@@ -4,8 +4,7 @@ const { MongoClient } = require("mongodb");
 const uri = process.env["MONGODB_URI"];
 const client = new MongoClient(uri);
 
-const db_uri = process.env["MONGODB_URI"];
-console.log(`db_uri: ${db_uri}`);
+console.log(`db_uri: ${uri}`);
 
 // Confession submission endpoint
 app.http("confession", {
