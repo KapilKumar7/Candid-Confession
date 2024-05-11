@@ -1,11 +1,14 @@
 const { app } = require("@azure/functions");
 const { MongoClient } = require("mongodb");
 
-const uri = process.env.MONGODB_URI || "mongodb://localhost:27017";
+const uri = process.env["MONGODB_URI"];
 const client = new MongoClient(uri);
 
+const db_uri = process.env["MONGODB_URI"];
+console.log(`db_uri: ${db_uri}`);
+
 // Confession submission endpoint
-app.http("confessions", {
+app.http("confession", {
   methods: ["POST"],
   authLevel: "anonymous",
   handler: async (request, context) => {
@@ -14,6 +17,7 @@ app.http("confessions", {
 
       let confessionobj = {
         confession: name,
+        timestamp: new Date(),
       };
 
       if (!confessionobj) {
@@ -36,7 +40,7 @@ app.http("confessions", {
   },
 });
 
-app.http("getConfessions", {
+app.http("confessions", {
   methods: ["GET"],
   authLevel: "anonymous",
   handler: async () => {
