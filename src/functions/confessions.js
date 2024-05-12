@@ -1,10 +1,12 @@
 const { app } = require("@azure/functions");
-const { MongoClient } = require("mongodb");
+const { MongoClient, ObjectId } = require("mongodb");
 
-const uri = process.env["MONGODB_URI"];
-const client = new MongoClient(uri);
+// const uri = process.env["MONGODB_URI"];
+const client = new MongoClient(
+  "mongodb+srv://mrkapilswach:6a1HmjNjb2i3ZJ1A@cluster0.szo5unb.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+);
 
-console.log(`db_uri: ${uri}`);
+// console.log(`db_uri: ${uri}`);
 
 // Confession submission endpoint
 app.http("confession", {
@@ -12,10 +14,19 @@ app.http("confession", {
   authLevel: "anonymous",
   handler: async (request, context) => {
     try {
-      const name = request.query.get("confession") || (await request.text());
+      const confess = request.query.get("confession") || (await request.text());
+      const category = request.query.get("category") || (await request.text());
+      console.log(category + " " + confess);
+      // const reactionAllowed = request.query.get("reactionAllowed") || (await request.text());
+      // const commentAllowed = request.query.get("commentAllowed") || (await request.text());
+      // const userId = new ObjectId();
 
       let confessionobj = {
-        confession: name,
+        confession: confess,
+        category: category,
+        // userId: userId,
+        // reactionAllowed: reactionAllowed,
+        // commentAllowed: commentAllowed,
         timestamp: new Date(),
       };
 
