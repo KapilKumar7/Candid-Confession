@@ -1,12 +1,10 @@
 const { app } = require("@azure/functions");
 const { MongoClient, ObjectId } = require("mongodb");
 
-// const uri = process.env["MONGODB_URI"];
-const client = new MongoClient(
-  "mongodb+srv://mrkapilswach:6a1HmjNjb2i3ZJ1A@cluster0.szo5unb.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
-);
+const uri = process.env["MONGODB_URI"];
+const client = new MongoClient(uri);
 
-// console.log(`db_uri: ${uri}`);
+console.log(`db_uri: ${uri}`);
 
 // Confession submission endpoint
 app.http("confession", {
