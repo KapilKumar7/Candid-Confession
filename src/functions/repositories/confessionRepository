@@ -1,0 +1,40 @@
+const config = require("../configs/config");
+const { connectToDatabase, closeDatabaseConnection } = require("../db/db");
+const Confession = require("../models/confessionModel");
+
+async function saveConfession(confessionData) {
+  let database;
+  try {
+    database = await connectToDatabase(config.MONGODB_URI);
+    const collection = database.collection("confessions");
+    await collection.insertOne(confessionData);
+  } catch (error) {
+    console.error("Error occurred while saving confession:", error);
+    throw error;
+  } finally {
+    if (database) {
+      await closeDatabaseConnection();
+    }
+  }
+}
+
+async function getConfessions(query) {
+  let database;
+  try {
+    database = await connectToDatabase(config.MONGODB_URI);
+    const collection = database.collection("confessions");
+    return await collection.find(query).toArray();
+  } catch (error) {
+    console.error("Error occurred while fetching confessions:", error);
+    throw error;
+  } finally {
+    if (database) {
+      await closeDatabaseConnection();
+    }
+  }
+}
+
+module.exports = {
+  saveConfession,
+  getConfessions,
+};
