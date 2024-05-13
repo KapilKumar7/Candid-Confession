@@ -1,5 +1,6 @@
 const { app } = require("@azure/functions");
 const { MongoClient, ObjectId } = require("mongodb");
+const { generateAnonymousName } = require("./utils");
 
 const uri = process.env["MONGODB_URI"];
 const client = new MongoClient(uri);
@@ -12,17 +13,48 @@ app.http("confession", {
   authLevel: "anonymous",
   handler: async (request, context) => {
     try {
-      const confess = request.query.get("confession") || (await request.text());
-      const category = request.query.get("category") || (await request.text());
+      const confess = request.query.get("confession");
+      const category = request.query.get("category");
+      const userId = request.query.get("userId");
       console.log(category + " " + confess);
-      // const reactionAllowed = request.query.get("reactionAllowed") || (await request.text());
-      // const commentAllowed = request.query.get("commentAllowed") || (await request.text());
-      // const userId = new ObjectId();
+      // const reactionAllowed = request.query.get("reactionAllowed") ;
+      // const commentAllowed = request.query.get("commentAllowed") ;
+
+      await client.connect();
+      const database = client.db("confessionsdb");
+      const collection = database.collection("confessions");
+
+      let userObjectId;
+      let anonymousName;
+
+      if (
+        userId === "" ||
+        userId === null ||
+        userId === undefined ||
+        userId === "undefined" ||
+        userId === "null"
+      ) {
+        userObjectId = new ObjectId();
+        anonymousName = generateAnonymousName();
+      } else {
+        let existingConfession = await database
+          .collection("confessions")
+          .findOne({ userId: new ObjectId(userId) });
+        if (existingConfession === null) {
+          userObjectId = new ObjectId();
+          anonymousName = generateAnonymousName();
+        } else {
+          userObjectId = new ObjectId(userId);
+          anonymousName = existingConfession.name;
+          console.log("Existing user: " + anonymousName);
+        }
+      }
 
       let confessionobj = {
         confession: confess,
         category: category,
-        // userId: userId,
+        userId: userObjectId,
+        name: anonymousName,
         // reactionAllowed: reactionAllowed,
         // commentAllowed: commentAllowed,
         timestamp: new Date(),
@@ -31,10 +63,6 @@ app.http("confession", {
       if (!confessionobj) {
         return { status: 400, body: "Please provide a confession." };
       }
-
-      await client.connect();
-      const database = client.db("confessionsdb");
-      const collection = database.collection("confessions");
 
       await collection.insertOne(confessionobj);
 
@@ -48,15 +76,28 @@ app.http("confession", {
   },
 });
 
+// Confessions fetching endpoint based on user id and category or all
 app.http("confessions", {
   methods: ["GET"],
   authLevel: "anonymous",
-  handler: async () => {
+  handler: async (request, context) => {
     try {
       await client.connect();
       const database = client.db("confessionsdb");
       const collection = database.collection("confessions");
-      const confessions = await collection.find({}).toArray();
+      const userId = request.query.get("userId");
+      const category = request.query.get("category");
+
+      let query = {};
+      if (userId && category && userId !== "undefined" && userId !== "null") {
+        query = { userId: new ObjectId(userId), category: category };
+      } else if (userId && userId !== "undefined" && userId !== "null") {
+        query = { userId: new ObjectId(userId) };
+      } else if (category) {
+        query = { category: category };
+      }
+
+      const confessions = await collection.find(query).toArray();
       return { status: 200, body: JSON.stringify(confessions) };
     } catch (error) {
       console.error("Error occurred while fetching confessions:", error);
@@ -70,6 +111,7 @@ app.http("confessions", {
   },
 });
 
+// Health check endpoint
 app.http("healthCheck", {
   methods: ["GET"],
   authLevel: "anonymous",
